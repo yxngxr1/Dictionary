@@ -11,7 +11,6 @@ class Search(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.btn_search.clicked.connect(self.search_word)
-        self.error = ''
 
         # utf-8 format
         self.files = ["data/ССС.txt", "data/СДРЯ.txt", "data/ЭССЯ.txt"]
@@ -20,6 +19,10 @@ class Search(QMainWindow, Ui_MainWindow):
         if os.path.exists("words.db") is False:
             self.create_bd()
             self.add_data()
+
+        # check errors
+        if os.path.exists('errors.txt'):
+            self.error.setText('Программа запущена с ошибкой/ами! Результаты сохранены в соответсвующий файл.')
 
         self.con_one = sqlite3.connect("words.db")
         self.cur_one = self.con_one.cursor()
@@ -100,9 +103,18 @@ class Search(QMainWindow, Ui_MainWindow):
                     cur.execute("""insert into words{}(word, translate) values("{}", "{}")""".format(n + 1, a, b)).fetchall()
                     con.commit()
                 except:
-                    self.error = 'Ошибка в файле: "{}", в строке: "{}", №: {}'.format(file, i, data.index(i) + 1)
-                    print(self.error)
-                    return
+                    if not os.path.exists('errors.txt'):
+                        error_count = 1
+                        f = open('errors.txt', 'w')
+
+                    error = 'Ошибка в файле: "{}", в строке: "{}", №: {}'.format(file, i.replace('\n', ''), data.index(i) + 1)
+
+                    if os.path.exists('errors.txt'):
+                        f.write("{}) {}\n".format(error_count, error))
+                        error_count += 1
+
+                    continue
+
             con.close()
 
 
