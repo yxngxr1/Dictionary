@@ -2,7 +2,7 @@ import sqlite3
 from sqlite3 import Error
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
-from design.main import Ui_MainWindow
+from design.design import Ui_MainWindow
 import os
 
 
@@ -12,6 +12,7 @@ class Search(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.btn_search.clicked.connect(self.search_word)
 
+        # create bd
         if os.path.exists("words.db") is False:
             self.create_bd()
             self.add_data()
@@ -20,7 +21,7 @@ class Search(QMainWindow, Ui_MainWindow):
         self.cur_one = self.con_one.cursor()
 
     def search_word(self):
-        word = self.word.toPlainText()
+        word = self.word.text()
 
         if len(word) != 0:
             info1 = self.cur_one.execute("""select * from words1 where translate like '%{}%'""".format(word)).fetchall()
@@ -40,6 +41,8 @@ class Search(QMainWindow, Ui_MainWindow):
             table.clear()
             table.setRowCount(len(info))
             table.setColumnCount(len(info[0]))
+            table.horizontalHeader().setSectionResizeMode(True)
+            table.setHorizontalHeaderLabels(['Слово', 'Перевод'])
 
             for i, elem in enumerate(info):
                 for j, val in enumerate(elem):
@@ -48,10 +51,10 @@ class Search(QMainWindow, Ui_MainWindow):
             if table == self.tableWidget_1:
                 self.info_1.setText('ССС (найдено {})'.format(len(info)))
 
-            if table == self.tableWidget_2:
+            elif table == self.tableWidget_2:
                 self.info_2.setText('СДРЯ (найдено {})'.format(len(info)))
 
-            if table == self.tableWidget_3:
+            elif table == self.tableWidget_3:
                 self.info_3.setText('ЭССЯ (найдено {})'.format(len(info)))
 
         else:
@@ -60,10 +63,10 @@ class Search(QMainWindow, Ui_MainWindow):
             if table == self.tableWidget_1:
                 self.info_1.setText('ССС (не найдено)')
 
-            if table == self.tableWidget_2:
+            elif table == self.tableWidget_2:
                 self.info_2.setText('СДРЯ (не найдено)')
 
-            if table == self.tableWidget_3:
+            elif table == self.tableWidget_3:
                 self.info_3.setText('ЭССЯ (не найдено)')
 
     def create_bd(self):
