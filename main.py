@@ -11,6 +11,10 @@ class Search(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.btn_search.clicked.connect(self.search_word)
+        self.error = ''
+
+        # utf-8 format
+        self.files = ["data/ССС.txt", "data/СДРЯ.txt", "data/ЭССЯ.txt"]
 
         # create bd
         if os.path.exists("words.db") is False:
@@ -21,12 +25,12 @@ class Search(QMainWindow, Ui_MainWindow):
         self.cur_one = self.con_one.cursor()
 
     def search_word(self):
-        word = self.word.text()
+        word = self.word.text().replace('"', "")
 
-        if len(word) != 0:
-            info1 = self.cur_one.execute("""select * from words1 where translate like '%{}%'""".format(word)).fetchall()
-            info2 = self.cur_one.execute("""select * from words2 where translate like '%{}%'""".format(word)).fetchall()
-            info3 = self.cur_one.execute("""select * from words3 where translate like '%{}%'""".format(word)).fetchall()
+        if len(word) > 0:
+            info1 = self.cur_one.execute("""select * from words1 where translate like "%{}%" """.format(word)).fetchall()
+            info2 = self.cur_one.execute("""select * from words2 where translate like "%{}%" """.format(word)).fetchall()
+            info3 = self.cur_one.execute("""select * from words3 where translate like "%{}%" """.format(word)).fetchall()
         else:
             info1 = self.cur_one.execute("""select * from words1""").fetchall()
             info2 = self.cur_one.execute("""select * from words2""").fetchall()
@@ -50,43 +54,29 @@ class Search(QMainWindow, Ui_MainWindow):
 
             if table == self.tableWidget_1:
                 self.info_1.setText('ССС (найдено {})'.format(len(info)))
-
             elif table == self.tableWidget_2:
                 self.info_2.setText('СДРЯ (найдено {})'.format(len(info)))
-
             elif table == self.tableWidget_3:
                 self.info_3.setText('ЭССЯ (найдено {})'.format(len(info)))
 
         else:
             table.clear()
+            table.setRowCount(0)
+            table.setColumnCount(0)
 
             if table == self.tableWidget_1:
                 self.info_1.setText('ССС (не найдено)')
-
             elif table == self.tableWidget_2:
                 self.info_2.setText('СДРЯ (не найдено)')
-
             elif table == self.tableWidget_3:
                 self.info_3.setText('ЭССЯ (не найдено)')
 
     def create_bd(self):
         database = r"words.db"
-        words1_table = """ CREATE TABLE words1 (
-                                        word      STRING,
-                                        translate STRING);"""
-
-        words2_table = """CREATE TABLE words2 (
-                                        word      STRING,
-                                        translate STRING);"""
-
-        words3_table = """CREATE TABLE words3 (
-                                word      STRING,
-                                translate STRING);"""
-
         conn = sqlite3.connect(database)
-        self.create_table(conn, words1_table)
-        self.create_table(conn, words2_table)
-        self.create_table(conn, words3_table)
+        for i in range(1, len(self.files) + 1):
+            dict = """create table words{}(word string, translate string);""".format(i)
+            self.create_table(conn, dict)
 
     def create_table(self, conn, table):
         try:
@@ -96,42 +86,24 @@ class Search(QMainWindow, Ui_MainWindow):
             print(e)
 
     def add_data(self):
-
-        #  words1
-        data = open("data/ССС.txt", mode='r', encoding='utf-8').readlines()
-        con = sqlite3.connect("words.db")
-        cur = con.cursor()
-        for i in data:
-            a, b = i.split('\t')
-            b = b.split('\n')[0][:-1]
-            print(a, b)
-            cur.execute("""insert into words1(word, translate) values('{}', '{}')""".format(a, b)).fetchall()
-            con.commit()
-        con.close()
-
-        #  words2
-        data = open("data/СДРЯ.txt", mode='r', encoding='utf-8').readlines()
-        con = sqlite3.connect("words.db")
-        cur = con.cursor()
-        for i in data:
-            a, b = i.split('\t')
-            b = b.split('\n')[0][:-1]
-            print(a, b)
-            cur.execute("""insert into words2(word, translate) values('{}', '{}')""".format(a, b)).fetchall()
-            con.commit()
-        con.close()
-
-        # words3
-        data = open("data/ЭССЯ.txt", mode='r', encoding='utf-8').readlines()
-        con = sqlite3.connect("words.db")
-        cur = con.cursor()
-        for i in data:
-            a, b = i.split('\t')
-            b = b.split('\n')[0][:-1]
-            print(a, b)
-            cur.execute("""insert into words3(word, translate) values("{}", "{}")""".format(a, b)).fetchall()
-            con.commit()
-        con.close()
+        for n, file in enumerate(self.files):
+            data = open(file, mode='r', encoding='utf-8').readlines()
+            con = sqlite3.connect("words.db")
+            cur = con.cursor()
+            for i in data:
+                try:
+                    a, b = i.split('\t')
+                    b = b.split('\n')[0][:-1]
+                    a = a.replace('"', "'")
+                    b = b.replace('"', "'")
+                    print(a, b)
+                    cur.execute("""insert into words{}(word, translate) values("{}", "{}")""".format(n + 1, a, b)).fetchall()
+                    con.commit()
+                except:
+                    self.error = 'Ошибка в файле: "{}", в строке: "{}", №: {}'.format(file, i, data.index(i) + 1)
+                    print(self.error)
+                    return
+            con.close()
 
 
 if __name__ == '__main__':
