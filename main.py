@@ -105,8 +105,7 @@ class Search(QMainWindow, Ui_MainWindow):
             a, b = i.split('\t')
             b = b.split('\n')[0][:-1]
             print(a, b)
-            cur.execute("""INSERT INTO words1(word) VALUES('{}')""".format(a)).fetchall()
-            cur.execute("""UPDATE words1 SET translate = '{}' where word = '{}'""".format(b, a)).fetchall()
+            cur.execute("""insert into words1(word, translate) values('{}', '{}')""".format(a, b)).fetchall()
             con.commit()
         con.close()
 
@@ -118,8 +117,7 @@ class Search(QMainWindow, Ui_MainWindow):
             a, b = i.split('\t')
             b = b.split('\n')[0][:-1]
             print(a, b)
-            cur.execute("""INSERT INTO words2(word) VALUES('{}')""".format(a)).fetchall()
-            cur.execute("""UPDATE words2 SET translate = '{}' where word = '{}'""".format(b, a)).fetchall()
+            cur.execute("""insert into words2(word, translate) values('{}', '{}')""".format(a, b)).fetchall()
             con.commit()
         con.close()
 
@@ -131,8 +129,7 @@ class Search(QMainWindow, Ui_MainWindow):
             a, b = i.split('\t')
             b = b.split('\n')[0][:-1]
             print(a, b)
-            cur.execute("""INSERT INTO words3(word) VALUES("{}")""".format(a)).fetchall()
-            cur.execute('''UPDATE words3 SET translate = "{}" where word = "{}"'''.format(b, a)).fetchall()
+            cur.execute("""insert into words3(word, translate) values("{}", "{}")""".format(a, b)).fetchall()
             con.commit()
         con.close()
 
