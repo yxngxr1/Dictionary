@@ -11,6 +11,7 @@ class Search(QMainWindow, Ui_MainWindow):
         super().__init__()
         self.setupUi(self)
         self.btn_search.clicked.connect(self.search_word)
+        self.error_count = 1
 
         # utf-8 format
         self.files = ["data/ССС.txt", "data/СДРЯ.txt", "data/ЭССЯ.txt"]
@@ -23,6 +24,8 @@ class Search(QMainWindow, Ui_MainWindow):
         # check errors
         if os.path.exists('errors.txt'):
             self.error.setText('Программа запущена с ошибкой/ами! Результаты сохранены в соответсвующий файл.')
+        else:
+            self.error.setText('v.1.0 © 2020 Дерганов Георгий')
 
         self.con_one = sqlite3.connect("words.db")
         self.cur_one = self.con_one.cursor()
@@ -49,6 +52,7 @@ class Search(QMainWindow, Ui_MainWindow):
             table.setRowCount(len(info))
             table.setColumnCount(len(info[0]))
             table.horizontalHeader().setSectionResizeMode(True)
+            table.verticalHeader().setMinimumSectionSize(10)
             table.setHorizontalHeaderLabels(['Слово', 'Перевод'])
 
             for i, elem in enumerate(info):
@@ -103,20 +107,18 @@ class Search(QMainWindow, Ui_MainWindow):
                     cur.execute("""insert into words{}(word, translate) values("{}", "{}")""".format(n + 1, a, b)).fetchall()
                     con.commit()
                 except:
-                    if not os.path.exists('errors.txt'):
-                        error_count = 1
-                        f = open('errors.txt', 'w')
-
-                    error = 'Ошибка в файле: "{}", в строке: "{}", №: {}'.format(file, i.replace('\n', ''), data.index(i) + 1)
-
-                    if os.path.exists('errors.txt'):
-                        f.write("{}) {}\n".format(error_count, error))
-                        error_count += 1
-
+                    self.write_error(i, data, file)
                     continue
 
             con.close()
 
+    def write_error(self, i, data, file):
+        if not os.path.exists('errors.txt'):
+            f = open('errors.txt', 'w')
+
+        error = 'Ошибка в файле: "{}", в строке: "{}", №: {}'.format(file, i.replace('\n', ''), data.index(i) + 1)
+        f.write("{}) {}\n".format(self.error_count, error))
+        self.error_count += 1
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
