@@ -116,7 +116,7 @@ class Search(QMainWindow, Ui_MainWindow):
     def write_error(self, i, file, e):
         self.write_flag = True
         if not os.path.exists('errors.txt'):
-            self.f = open('errors.txt', 'w')
+            self.f = open('errors.txt', mode='w', encoding='utf-8')
 
         error = 'Ошибка({}) в файле: "{}", в строке: "{}"'.format(e, file, i)
         self.f.write("{}) {}\n".format(self.error_count, error))
