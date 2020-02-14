@@ -10,8 +10,10 @@ class Search(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.word.returnPressed.connect(self.search_word)
         self.btn_search.clicked.connect(self.search_word)
         self.error_count = 1
+        self.write_flag = False
 
         # utf-8 format
         self.files = ["data/ССС.txt", "data/СДРЯ.txt", "data/ЭССЯ.txt"]
@@ -23,10 +25,12 @@ class Search(QMainWindow, Ui_MainWindow):
 
         # check errors
         if os.path.exists('errors.txt'):
-            self.error.setText('Программа запущена с ошибкой/ами! Результаты сохранены в соответсвующий файл.')
-            self.f.close()
+            self.statusBar().showMessage('Программа запущена с ошибкой/ами! Результаты сохранены в "errors.txt"')
         else:
-            self.error.setText('v.1.1 © 2020 Дерганов Георгий')
+            self.statusBar().showMessage('v.1.1 © 2020 Дерганов Георгий')
+
+        if self.write_flag:
+            self.f.close()
 
         self.con_one = sqlite3.connect("words.db")
         self.cur_one = self.con_one.cursor()
@@ -52,8 +56,6 @@ class Search(QMainWindow, Ui_MainWindow):
             table.clear()
             table.setRowCount(len(info))
             table.setColumnCount(len(info[0]))
-            table.horizontalHeader().setSectionResizeMode(True)
-            table.verticalHeader().setMinimumSectionSize(10)
             table.setHorizontalHeaderLabels(['Слово', 'Перевод'])
 
             for i, elem in enumerate(info):
@@ -66,6 +68,9 @@ class Search(QMainWindow, Ui_MainWindow):
                 self.info_2.setText('СДРЯ (найдено {})'.format(len(info)))
             elif table == self.tableWidget_3:
                 self.info_3.setText('ЭССЯ (найдено {})'.format(len(info)))
+
+            table.resizeColumnsToContents()
+            table.verticalHeader().setMinimumSectionSize(10)
 
         else:
             table.clear()
@@ -106,10 +111,10 @@ class Search(QMainWindow, Ui_MainWindow):
                 except Exception as e:
                     self.write_error(i, file, e)
                     continue
-
             con.close()
 
     def write_error(self, i, file, e):
+        self.write_flag = True
         if not os.path.exists('errors.txt'):
             self.f = open('errors.txt', 'w')
 
