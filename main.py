@@ -24,8 +24,9 @@ class Search(QMainWindow, Ui_MainWindow):
         # check errors
         if os.path.exists('errors.txt'):
             self.error.setText('Программа запущена с ошибкой/ами! Результаты сохранены в соответсвующий файл.')
+            self.f.close()
         else:
-            self.error.setText('v.1.0 © 2020 Дерганов Георгий')
+            self.error.setText('v.1.1 © 2020 Дерганов Георгий')
 
         self.con_one = sqlite3.connect("words.db")
         self.cur_one = self.con_one.cursor()
@@ -94,30 +95,27 @@ class Search(QMainWindow, Ui_MainWindow):
 
     def add_data(self):
         for n, file in enumerate(self.files):
-            data = open(file, mode='r', encoding='utf-8').readlines()
+            data = open(file, mode='r', encoding='utf-8').read().split('\n')
             con = sqlite3.connect("words.db")
             cur = con.cursor()
             for i in data:
                 try:
                     a, b = i.split('\t')
-                    b = b.split('\n')[0][:-1]
-                    a = a.replace('"', "'")
-                    b = b.replace('"', "'")
-                    print(a, b)
                     cur.execute("""insert into words{}(word, translate) values("{}", "{}")""".format(n + 1, a, b)).fetchall()
                     con.commit()
-                except:
-                    self.write_error(i, data, file)
+                except Exception as e:
+                    self.write_error(i, file, e)
                     continue
 
             con.close()
 
-    def write_error(self, i, data, file):
+    def write_error(self, i, file, e):
         if not os.path.exists('errors.txt'):
-            f = open('errors.txt', 'w')
+            self.f = open('errors.txt', 'w')
 
-        error = 'Ошибка в файле: "{}", в строке: "{}", №: {}'.format(file, i.replace('\n', ''), data.index(i) + 1)
-        f.write("{}) {}\n".format(self.error_count, error))
+        error = 'Ошибка({}) в файле: "{}", в строке: "{}"'.format(e, file, i)
+        self.f.write("{}) {}\n".format(self.error_count, error))
+        print('Ошибочка:', self.error_count)
         self.error_count += 1
 
 if __name__ == '__main__':
